@@ -1,0 +1,48 @@
+Deploying application in Monolithic Architecture using Single EC2 Instance
+
+Here’s a step-by-step guide to deploying WordPress with MySQL on a single EC2 instance (Monolithic Architecture).
+1.Launch an EC2 Instance
+  Instance Type: t2.micro
+  AMI: Ununtu
+  Security Group Configuration
+    ->SSh(22)
+    ->HTTP(80)
+    ->HTTPS(443)
+    ->MySQL(3306)
+2.Connect to the EC2 Instance
+Once the instance is running, connect via SSH:
+  ->ssh -i key.pem ubuntu@ec2-public-ip
+3.Install Required Packages 
+  ->sudo apt update
+  ->sudo apt upgrade
+  ->sudo apt install apache2
+  ->sudo apt install php libapache2-mod-php php-mysql
+  ->sudo apt install mysql-server
+Enable and start Apache:
+  ->sudo systemctl enable apache2
+  ->sudo systemctl start apache2
+4. Configure MySQL
+Create a WordPress database and user:
+  ->sudo mysql -u root
+  ->ALTER USER 'wpuser'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Password@123';
+  ->CREATE USER 'wpuser'@'localhost' IDENTIFIED BY 'Password@123';
+  ->CREATE DATABASE wordpress;
+  ->GRANT ALL PRIVILEGES ON wordpress.* TO 'wpuser'@'localhost';
+  ->exit;
+5.Install and Configure Wordpress
+Download and Extract WordPress:
+  ->cd /tmp
+  ->sudo wget https://wordpress.org/latest.tar.gz
+  ->sudo tar -xvzf latest.tar.gz
+  ->sudo mv wordpress/ /var/www/html
+  ->sudo systemctl restart apache2
+6. Access WordPress
+Open a browser and go to:
+  ->http://<instance_public_ip> in your browser.
+  ->Complete the Wordpress installation process.
+  ->Log in to Wordpress Admin (http://<instance_public_ip>/wp-admin).
+  ->If we want to create a page go to Pages->Add new.
+  ->Create a page called "Welcome".
+  ->Go to Settings->Reading->Set Welcome page as the homepage.
+  ->Save the changes.
+It creates welcome page in wordpress that will be the homepage.
