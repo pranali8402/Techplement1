@@ -1,0 +1,73 @@
+Deploy application in Microservices Architecture using 2 EC2 instances, 1 for wordpress and 1 for MYSQL.
+
+Step 1:Launch EC2 Instances
+Create two instances:
+  ->Wordpress Instance:
+    ->Instance Type: t2.micro
+    ->AMI: Ubuntu
+    ->Security Group: Allow HTTP(80), SSH(22), and MySQL(3306 from MySQL instance)
+  ->MySQL Instance:
+    ->Instance Type; t2.micro
+    ->AMI: Ubuntu
+    ->Security Group: Allow SSh(22) and MySQL (3306 from Wordpress instance)
+Step 2: Configure Security Groups
+  ->Wordpress Instance Security Group
+    ->SSH(22) from your IP
+    ->HTTP(80) from 0.0.0.0/0 (for public access)
+    ->MySQL(3306) from the MySQL instance private IP
+  ->MySQL Instance Security Group
+    ->SSH(22) from your IP
+    ->MySQL(3306) from the WordPress instance private IP
+Step 3: Set up MySQL Database
+  Connect to MySQL Instance
+    ->ssh -i key.pem ubuntu@mysql_public_ip
+  Install MySQL Server
+    ->sudo apt update
+    ->sudo aapt install mysql-server
+  Create Wordpress Database and User
+    ->sudo mysql -u root
+    ->ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'Password@123';
+    ->CREATE USER 'wp-user'@'localhost' IDENTIFIED BY 'Password@123';
+    ->CREATE DATABASE wp;
+    ->GRANT ALL PRIVILEGES ON wp.* TO 'wp-user'@'localhost';
+    ->exit;
+  Edit MySQL Config to Allow Remote Access
+    ->sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
+    Find bind-address=127.0.0.1 and replace it with bind-address=0.0.0.0
+    Save and restart MySQL:
+    ->sudo systemctl restart mysql
+Step 4:Set up WordPress on EC2
+  1.Connect to WordPress Instance:
+    ->ssh -i key.pem ubuntu@wordpress_public_ip
+  2.Install Dependencies:
+    ->sudo apt update
+    ->sudo apt install apache2
+    ->sudo apt install php libapache2-mod-php php-mysql
+  3.Download and Configure Wordpress
+    ->cd /var/www/html
+    ->sudo wget https://wordpress.org/latest.zip
+    ->sudo unzip latest.zip
+    ->sudo mv wordpress/* .
+    ->sudo rm -r wordpress latest.zip
+  4.Configure Wordpress to Use MySQL Instance
+    ->sudo cp wp-config-sample.php wp-config.php
+    ->sudo nano wp-config.php
+  Update the database details:
+    ->define('DB_NAME', 'wp');
+    ->define('DB_USER', 'wp-user');
+    ->define('DB_PASSWORD', 'password');
+    ->define('DB_HOST', '<MYSQL_INSTANCE_PRIVATE_IP>');
+  5.Set Permissions and Restart Apache
+    ->sudo chown -R www-data:www-data /var/www/html
+    ->sudo chmod -R 755 /var/www/html
+    ->sudo systemctl restart apache2
+Step 5: Access WordPress
+  ->Open http://<wordpress_instance_public_ip> in your browser.
+  ->Complete the Wordpress installation process.
+  ->Log in to Wordpress Admin (http://<Wordpress_instance_public_ip>/wp-admin).
+  ->If we want to create a page go to Pages->Add new.
+  ->Create a page called "Welcome".
+  ->Go to Settings->Reading->Set Welcome page as the homepage.
+  ->Save the changes.
+It creates welcome page in wordpress that will be the homepage
+Finally our microservices-based Wordpress deployment is now complete.
